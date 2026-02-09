@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "sleep 10 && python main.py"
+    ports:
+      - 8001:5000
+    volumes:
+      - .:/app:z
+    depends_on:
+      - db
+    environment:
+      - PYTHONUNBUFFERED=1
+    # Don't start RabbitMQ here - use admin's RabbitMQ
+
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "sleep 15 && python -u consumer.py"
+    depends_on:
+      - db
+    environment:
+      - PYTHONUNBUFFERED=1
+    # Don't start RabbitMQ here - use admin's RabbitMQ
+
+  db:
+    image: mysql:5.7.22
+    restart: always
+    environment:
+      MYSQL_DATABASE: main
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - .dbdata:/var/lib/mysql:z
+    ports:
+      - 33067:3306
